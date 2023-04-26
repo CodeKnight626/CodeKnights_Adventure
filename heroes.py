@@ -19,7 +19,11 @@ class Heroes:
         self.standSprite_back, self.jumpingSprite_back, self.fallSprite_back, self.running_1Sprite_back, self.running_2Sprite_back = heroDataDict['sprites_back']
         # self.sprites = heroDataDict['sprites']
         self.maxJumpReached = False
-        self.jumping = False
+        self.jumpReleased = False
+
+        self.lastState = 0
+        self.currentState = 0
+
         self.vel = vec(0, 0)
         self.acc = vec(0, 0)
 
@@ -54,6 +58,7 @@ class Heroes:
         maxJumpValue = self.GROUND_LEVEL - self.MAX_JUMP
         if valueHeight < maxJumpValue:
             self.maxJumpReached = True
+            #self.isJumping = False
 
     def move(self, valueX, valueY, ACC, FRIC):
         # Tomamos la posicion actual tanto en X como en Y
@@ -78,17 +83,24 @@ class Heroes:
             self.vel.x = 0
         if keys[pygame.K_w]:
             # Si el personaje esta al nivel del suelo y no ha llegado...
-            # al saltro maximo puede saltar
-            if self.pos.y > self.GROUND_LEVEL - self.MAX_JUMP and not self.maxJumpReached:
-                self.vel.y = -15
+            # al salto maximo puede saltar  
+            if self.pos.y >= self.GROUND_LEVEL - self.MAX_JUMP and not self.maxJumpReached and not self.jumpReleased:
+                if self.pos.y >= self.lastState:
+                    self.vel.y = -15
+        # Si no presionamos la tecla W liberamos el salto
+        else:
+            self.jumpReleased = True
+        
 
-        self.acc += self.vel * FRIC
-        self.vel += self.acc
-        # borrar esto tambien
-        # if(self.vel.x) > 4:
-        #    self.vel.x = 8
-        self.pos += self.vel + 0.5 * self.acc
+        #print(self.vel.y)
+        self.acc.x += self.vel.x * FRIC
+        self.vel.x += self.acc.x
+        self.pos.x += self.vel.x + 0.5 * self.acc.x
 
+        self.acc.y += self.vel.y * FRIC
+        self.vel.y += self.acc.y
+        self.pos.y += self.vel.y + 0.5 * self.acc.y
+        
         
         # Evita que el personaje se salga de la pantalla visible en el eje de las x
         if self.pos.x > 1280:
@@ -96,13 +108,14 @@ class Heroes:
         if self.pos.x < 0:
             self.pos.x = 0
 
-        # Evita que el personaje se salga de la pantalla visble en el eje de las y
-        if self.pos.y > self.GROUND_LEVEL:
+        # Evita que el personaje se salga de la pantalla visble en el eje de las y...
+        # y reseteamos las condiciones de salto
+        if self.pos.y >= self.GROUND_LEVEL:
             self.maxJumpReached = False
+            self.jumpReleased = False
             self.pos.y = self.GROUND_LEVEL
             self.vel.y = 0
 
-        print(self.vel.y)
         return self.pos
 
     def getAccion(self, valueX):
@@ -134,6 +147,10 @@ class Heroes:
                 return self.heroRunning2
         # estado = self.heroRunning if modResultForX == 0 and self.vel.x else self.heroRunning2
         # return estado
+
+    def moveHitbox(self):
+        self.hitbox = pygame.Rect(self.pos.x, self.pos.y, 120, 120)
+        return self.hitbox
 
 
 codeKnight = {

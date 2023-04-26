@@ -4,6 +4,9 @@ import sys
 # cargamos los datos de los personajes principales
 import heroes
 
+# cargamos los datos par alas plataformas
+import platforms
+
 # Configuracion inicial pygame
 pygame.init()
 screen = pygame.display.set_mode((1280, 720))
@@ -26,6 +29,14 @@ hero.pos = pygame.Vector2(hero.pos)
 ACC = 0.5 # aceleracion general para todos los personajes
 FRIC = -0.12 # friccion general para todos los personajes
 
+# Plataformas
+floor = platforms.Platform(0, 627, 1280, 50)
+
+# Espacio para las funciones generales
+def hit():
+    return
+
+
 while running:
     # rutina para eventos
     # el evento pygame.QUIT significa que el usuario presiono la X
@@ -34,16 +45,23 @@ while running:
             running = False
 
     # pinta la pantalla de un solo color
-    screen.fill("blue")
+    #screen.fill("blue")
     # cargamos la imagen de fondo
     screen.blit(bg_scaled, (0,0))
+    #screen.fill("black")
 
 
     #Cargamos el diseño del protagonista
+    pygame.draw.rect(bg_scaled, (255, 0, 0, 255), hero.moveHitbox(),  2)
+    #pygame.draw.rect(bg_scaled, (255, 0, 0, 255), pygame.Rect(0, 0, 500, 60), 2)
     screen.blit(hero.getAccion(hero.pos.x), hero.pos)
     # actualizamos la posicion del personaje en pantalla
     hero.pos = hero.move(hero.pos.x, hero.pos.y, ACC, FRIC)
 
+    # dibujamos las plataformas
+    pygame.draw.rect(bg_scaled, floor.color, floor.drawPlatform(), 2)
+    
+    
     # flip() el display para poner el trabajo en pantalla
     pygame.display.flip()
     #print(hero.pos.y)w
