@@ -32,9 +32,34 @@ FRIC = -0.12 # friccion general para todos los personajes
 # Plataformas
 floor = platforms.Platform(0, 627, 1280, 50)
 
+platform1  = platforms.Platform(50, 400, 200, 50)
+platformsList = []
+platformsList.append(floor)
+platformsList.append(platform1)
+
 # Espacio para las funciones generales
-def hit():
-    return
+def hit_heroAgainstPlatform(heroHitboxPosX, heroHitboxPosY, heroHitboxWidth, heroHitboxHeight,
+                            platformPosX, platformPosY, plaformWidth, plaformHeight):
+    #print(f"pos Y + altura: {heroHitboxPosY + heroHitboxHeight}")
+    #print(f"altura hitbox: {heroHitboxHeight}")
+    #print(f"suma: {heroHitboxPosY + heroHitboxHeight}")
+    #print(f"posicion plataforma Y: {platformPosY + 3}")
+    #print(heroHitboxPosX + heroHitboxWidth)
+    if heroHitboxPosX + heroHitboxWidth >= platformPosX and heroHitboxPosX <= platformPosX + plaformWidth:
+        hitX =  True
+    else:
+        hitX = False
+    if heroHitboxPosY + heroHitboxHeight >= platformPosY and not heroHitboxPosY + heroHitboxHeight >= platformPosY + 5:
+        hitY =  True
+    else:
+        hitY =  False
+    print(hitX and hitY)
+    if hitX and hitY:
+        #print("hit")
+        hero.startJumpLevel = platformPosY - heroHitboxHeight
+        return True
+    else:
+        return False
 
 
 while running:
@@ -52,14 +77,27 @@ while running:
 
 
     #Cargamos el diseño del protagonista
-    pygame.draw.rect(bg_scaled, (255, 0, 0, 255), hero.moveHitbox(),  2)
-    #pygame.draw.rect(bg_scaled, (255, 0, 0, 255), pygame.Rect(0, 0, 500, 60), 2)
+    pygame.draw.rect(screen, (255, 0, 0, 125), hero.moveHitbox(), 2)
     screen.blit(hero.getAccion(hero.pos.x), hero.pos)
-    # actualizamos la posicion del personaje en pantalla
-    hero.pos = hero.move(hero.pos.x, hero.pos.y, ACC, FRIC)
 
+
+    # revisamos por colisiones entre hitbos del personaje y palataformas
+    heroAgainsPlatform1 = hit_heroAgainstPlatform(hero.getHitbox_x(), hero.getHitbox_y(), hero.getHitbox_width(), hero.getHitbox_height(),
+                            floor.getHitbox_x(), floor.getHitbox_y(), floor.getHitbox_width(), floor.getHitbox_height())
+    heroAgainsPlatform2 = hit_heroAgainstPlatform(hero.getHitbox_x(), hero.getHitbox_y(), hero.getHitbox_width(), hero.getHitbox_height(),
+                        platform1.getHitbox_x(), platform1.getHitbox_y(), platform1.getHitbox_width(), platform1.getHitbox_height())
+    
+    if heroAgainsPlatform1 or heroAgainsPlatform2:
+        heroAgainsPlatform = True
+    else:
+        heroAgainsPlatform = False
+
+    # actualizamos la posicion del personaje en pantalla
+    hero.pos = hero.move(hero.pos.x, hero.pos.y, ACC, FRIC, heroAgainsPlatform)
+    
     # dibujamos las plataformas
     pygame.draw.rect(bg_scaled, floor.color, floor.drawPlatform(), 2)
+    pygame.draw.rect(bg_scaled, platform1.color, platform1.drawPlatform(), 2)
     
     
     # flip() el display para poner el trabajo en pantalla

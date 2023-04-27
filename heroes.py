@@ -20,6 +20,10 @@ class Heroes:
         # self.sprites = heroDataDict['sprites']
         self.maxJumpReached = False
         self.jumpReleased = False
+        self.jumpCounter = 0
+        self.startJumpLevel = 503
+
+        self.hitbox = pygame.Rect(self.pos.x, self.pos.y, 120, 120)
 
         self.lastState = 0
         self.currentState = 0
@@ -42,9 +46,12 @@ class Heroes:
         self.heroRunning_back = self.loadAndScaleImage(self.running_1Sprite_back, self.scale)
         self.heroRunning2_back = self.loadAndScaleImage(self.running_2Sprite_back, self.scale)
 
+        self.imageSize_width = self.heroStandImg.get_width()
+        self.imageSize_height = self.heroStandImg.get_height()
+
         # constantes para el personaje
-        self.GROUND_LEVEL = 503.0
-        self.MAX_JUMP = 300
+        self.MAX_JUMP = 500
+
 
     def loadAndScaleImage(self, path, scale=(2, 2)):
         return pygame.transform.scale_by(pygame.image.load(path), scale)
@@ -55,12 +62,12 @@ class Heroes:
     # Revisa si el personaje llego al maximo de su salto
     # si es verdadero, modifica la variable maxJumpReached
     def IsmaxJumpReached(self, valueHeight):
-        maxJumpValue = self.GROUND_LEVEL - self.MAX_JUMP
+        maxJumpValue = self.startJumpLevel - self.MAX_JUMP
         if valueHeight < maxJumpValue:
             self.maxJumpReached = True
             #self.isJumping = False
 
-    def move(self, valueX, valueY, ACC, FRIC):
+    def move(self, valueX, valueY, ACC, FRIC, heroAgainsPlatform):
         # Tomamos la posicion actual tanto en X como en Y
         self.pos.x = valueX
         self.pos.y = valueY
@@ -83,13 +90,22 @@ class Heroes:
             self.vel.x = 0
         if keys[pygame.K_w]:
             # Si el personaje esta al nivel del suelo y no ha llegado...
-            # al salto maximo puede saltar  
-            if self.pos.y >= self.GROUND_LEVEL - self.MAX_JUMP and not self.maxJumpReached and not self.jumpReleased:
-                if self.pos.y >= self.lastState:
-                    self.vel.y = -15
+            # al salto maximo puede saltar
+            if self.jumpCounter == 0:
+                heroAgainsPlatform = False
+                self.startJumpLevel = self.pos.y + self.imageSize_height
+                #print(self.startJumpLevel)
+                self.jumpCounter = 1 
+            if self.jumpCounter == 2:
+                self.jumpCounter = 3
+            if self.pos.y >= self.startJumpLevel - self.MAX_JUMP and not self.maxJumpReached and not self.jumpReleased:
+                self.vel.y = -15
         # Si no presionamos la tecla W liberamos el salto
         else:
-            self.jumpReleased = True
+            if self.jumpCounter == 1:
+                self.jumpCounter = 2
+            if self.jumpCounter == 3:
+                self.jumpReleased = True
         
 
         #print(self.vel.y)
@@ -109,13 +125,23 @@ class Heroes:
             self.pos.x = 0
 
         # Evita que el personaje se salga de la pantalla visble en el eje de las y...
-        # y reseteamos las condiciones de salto
-        if self.pos.y >= self.GROUND_LEVEL:
+        if heroAgainsPlatform:
+            self.pos.y = self.startJumpLevel
             self.maxJumpReached = False
             self.jumpReleased = False
-            self.pos.y = self.GROUND_LEVEL
+            self.jumpCounter = 0
             self.vel.y = 0
 
+        # Si el personaje toca el hitbox de alguna plataforma reseta las condiciones de salto
+        #if heroAgainsPlatform:
+        #    #self.pos.y = self.startJumpLevel
+        #    self.maxJumpReached = False
+        #    self.jumpReleased = False
+        #    self.jumpCounter = 0
+        #    self.vel.y = 0
+        
+
+        self.moveHitbox()
         return self.pos
 
     def getAccion(self, valueX):
@@ -149,9 +175,24 @@ class Heroes:
         # return estado
 
     def moveHitbox(self):
-        self.hitbox = pygame.Rect(self.pos.x, self.pos.y, 120, 120)
+        self.hitbox = pygame.Rect(self.pos.x, self.pos.y, self.imageSize_width, self.imageSize_height)
         return self.hitbox
-
+    
+    def getHitbox_x(self):
+        #regresa la coordenada en X de la posicion donde inciia el hitbox
+        return self.hitbox.topleft[0]
+    
+    def getHitbox_y(self):
+        #regresa la coordenada en Y de la posicion donde inciia el hitbox
+        return self.hitbox.topleft[1]
+    
+    def getHitbox_width(self):
+        #regresa el ancho del hitbox
+        return self.hitbox.width
+    
+    def getHitbox_height(self):
+        #regresa el alto del hitbox
+        return self.hitbox.height
 
 codeKnight = {
     'hp': 10,
